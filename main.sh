@@ -74,7 +74,7 @@ while getopts ":hn:k:c:a:" opt; do
 done
 
 # Adding the worker servers to the array
-for((i=1; i<=$OPTARG; i++)); do K_SERVERS+=("${K_WORKER_PREFIX}$i"); done
+for((i=1; i<=$K_SERVERS_N; i++)); do K_SERVERS+=("${K_WORKER_PREFIX}$i"); done
 
 display $BLUE "WORKER_NODES=$((${#K_SERVERS[@]}-1))\nSSH_KEY_NAME=${SSH_KEY_NAME}\nMULTIPASS_CONFIG=${MULTIPASS_CONFIG}\n"
 
