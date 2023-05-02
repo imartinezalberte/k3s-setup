@@ -49,3 +49,13 @@ function is_ipv4_name {
   addr=$1
   [[ $(ip -4 addr show | grep -E "^[0-9]+" | awk -F':' '{ print $2; }' | cut -d' ' -f2 | grep -c "$addr") -eq 1 ]]
 }
+
+# ssh_exec executes a command or a couple of them in a remote host
+function ssh_exec {
+  if [[ $# -lt 2 ]]; then return 1; fi
+  address=$1
+  shift
+  args=$@
+
+  ssh $address $args
+}

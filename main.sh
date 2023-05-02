@@ -15,6 +15,7 @@ SSH_KEY_NAME=k3s_testing
 PASSPHRASE=""
 
 # Multipass configuration
+MULTIPASS_ADDRESS='no' # Example: username@ip # Not working properly
 MULTIPASS_CONFIG=${PWD}/multipass/config.yaml
 MULTIPASS_VM_CPUS=1
 MULTIPASS_VM_DISK='4G'
@@ -61,7 +62,7 @@ which k3sup > /dev/null 2>&1 || { display $PURPLE "Installing k3sup"; curl -sLS 
 # We need jq to get the information needed from the json output of multipass
 which jq > /dev/null 2>&1 || { display $PURPLE "Installing jq"; sudo apt-get install --yes jq; }
 
-while getopts ":hn:k:c:" opt; do
+while getopts ":hn:k:c:a:" opt; do
   case $opt in
     n) if ! is_number $OPTARG; then 
       display $RED "The number of machines must be 1 or greater."; usage; exit 2
@@ -71,7 +72,9 @@ while getopts ":hn:k:c:" opt; do
     ;;
     k) SSH_KEY_NAME=${OPTARG:-SSH_KEY_NAME}
     ;;
-    c) MULTIPASS_CONFIG = ${OPTARG:-MULTIPASS_CONFIG} 
+    c) MULTIPASS_CONFIG=${OPTARG:-MULTIPASS_CONFIG} 
+    ;;
+    a) MULTIPASS_ADDRESS=${OPTARG:-MULTIPASS_ADDRESS}
     ;;
     h) usage
     exit 0

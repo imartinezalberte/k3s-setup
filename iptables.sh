@@ -42,7 +42,7 @@ while getopts ":hp:a:i:" opt; do
   esac
 done
 
-if [[ $UID -eq 0 ]]; then
+if [[ $UID -ne 0 ]]; then
   display $RED "You should use super user in this case"
   exit 1
 fi
