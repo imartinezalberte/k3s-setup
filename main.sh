@@ -8,15 +8,7 @@
 # Exit codes:
 # - 1: Error creating the private/public key to log into the VMs using k3sup or standard tools like ssh
 
-## Colors
-NO_COLOR='\033[0m'
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BROWN='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-LIGHT_GRAY='\033[0;37m'
+. ./utils.sh
 
 # ssh configurations
 SSH_KEY_NAME=k3s_testing
@@ -32,33 +24,6 @@ MULTIPASS_VM_MEMORY='2G'
 K_WORKER_PREFIX="node-"
 K_SERVERS=("master-node")
 KUBECONFIG=/tmp/kubeconfig
-
-# display function echo the text with the desired color.
-# 
-# Arguments:
-#   - First is the color
-#   - Second and so on is the text that you want to display
-function display {
-  if [[ $# -lt 2 ]]; then return 0; fi
-  color=$1
-  text=${@:2}
-
-  echo -e "${color}${text}${NO_COLOR}"
-}
-
-# is_number function checks is the string is a number or not(limited to one character and not 0)
-# Negative numbers are not allowed
-#
-# Arguments:
-#   The first and only argument is the string to be checked
-function is_number {
-  if [[ $# -ne 1 ]]; then return 1; fi
-  if [[ "$1" =~ ^[1-9]$ ]]; then 
-    return 0
-  else 
-    return 1
-  fi
-}
 
 # usage function just returns a help text to explain what is the purpose of this script and the possible options that it offers.
 function usage {
