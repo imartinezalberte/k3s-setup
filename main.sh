@@ -19,7 +19,7 @@ MULTIPASS_ADDRESS='no' # Example: username@ip # Not working properly
 MULTIPASS_CONFIG=${PWD}/multipass/config.yaml
 MULTIPASS_VM_CPUS=1
 MULTIPASS_VM_DISK='4G'
-MULTIPASS_VM_MEMORY='2G'
+MULTIPASS_VM_MEMORY='4G'
 
 # Kubernetes configuration
 K_WORKER_PREFIX="node-"
