@@ -23,6 +23,7 @@ MULTIPASS_VM_MEMORY='4G'
 
 # Kubernetes configuration
 K_WORKER_PREFIX="node-"
+K_SERVERS_N=2
 K_SERVERS=("master-node")
 KUBECONFIG=/tmp/kubeconfig
 
@@ -36,21 +37,6 @@ function usage {
     -k <ssh_key_name> : specify the name of the key file that you are going to use to authenticate with VMs created by multipass. Also used by k3sup. By default k3s_testing.
     -p <ssh_key_location> : specify the location of the multipass config. Here we are going to set the authorized keys for the multipass VMs. By default, $PWD/multipass/config.yaml
 EOF
-}
-
-# add_workers function adds a number of agents to the array to loop over them after.
-#
-# Arguments:
-#   The first and only argument that it supports is the number of worker nodes that you want to display.
-function add_workers {
-  if [[ $# -ne 1 ]]; then return 1; fi
-  if ! is_number $1; then return 1; fi
-
-  for((i=1; i<=$1; i++)); do
-    K_SERVERS+=("${K_WORKER_PREFIX}$i")
-  done
-
-  return 0
 }
 
 # Curl is used to download stuff from internet
@@ -67,7 +53,9 @@ while getopts ":hn:k:c:a:" opt; do
     n) if ! is_number $OPTARG; then 
       display $RED "The number of machines must be 1 or greater."; usage; exit 2
     else
-      for((i=1; i<=$OPTARG; i++)); do K_SERVERS+=("${K_WORKER_PREFIX}$i"); done
+      if [[ $OPTARG -lt 9 ]]; then
+        K_SERVERS_N=$OPTARG
+      fi
     fi
     ;;
     k) SSH_KEY_NAME=${OPTARG:-SSH_KEY_NAME}
@@ -84,6 +72,9 @@ while getopts ":hn:k:c:a:" opt; do
     ;;
   esac
 done
+
+# Adding the worker servers to the array
+for((i=1; i<=$OPTARG; i++)); do K_SERVERS+=("${K_WORKER_PREFIX}$i"); done
 
 display $BLUE "WORKER_NODES=$((${#K_SERVERS[@]}-1))\nSSH_KEY_NAME=${SSH_KEY_NAME}\nMULTIPASS_CONFIG=${MULTIPASS_CONFIG}\n"
 
