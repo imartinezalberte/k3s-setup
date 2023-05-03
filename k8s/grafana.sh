@@ -8,7 +8,7 @@ script_path=$(dirname "$absolute_path")
 ADDRESS=${1:-"0.0.0.0"}
 KUBECONFIG=${2:-"/tmp/kubeconfig"}
 
-username=$(kubectl --kubeconfig=$KUBECONFIG get secrets/loki-stack-grafana -n loki -o json | jq -r '.data."admin-username"' | base64 --decode)
+username=$(kubectl --kubeconfig=$KUBECONFIG get secrets/loki-stack-grafana -n loki -o json | jq -r '.data."admin-user"' | base64 --decode)
 password=$(kubectl --kubeconfig=$KUBECONFIG get secrets/loki-stack-grafana -n loki -o json | jq -r '.data."admin-password"' | base64 --decode)
 
 display $GREEN "Here your credentials:\n\tusername: $username\n\tpassword: $password"
