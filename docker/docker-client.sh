@@ -22,14 +22,14 @@ while read -r docker_file; do
     actual_version=("${versions[@]}")
   fi
 
-done < <(curl -sSL $URL | grep -E '<a href="docker-[0-9]+' | cut -d'"' -f2 | cut -d'-' -f2)
+done < <(curl -fsSL $URL | grep -E '<a href="docker-[0-9]+' | cut -d'"' -f2 | cut -d'-' -f2)
 
 docker_binary=docker-$(IFS=. ; echo "${versions[*]}")
 docker_binary_url="${URL}${docker_binary}.${suffix:-tgz}"
 
 display $GREEN "We are going to use the URL ${docker_binary_url}"
 
-curl -sSL $docker_binary_url --output "./${docker_binary}.${suffix:-tgz}" && \
+curl -fsSL $docker_binary_url --output "./${docker_binary}.${suffix:-tgz}" && \
   tar -xvzf ./${docker_binary}.${suffix:-tgz} && \
   sudo install -o root -g root -m 0755 docker/docker /usr/local/bin/docker && \
   rm -rf docker "${docker_binary}.${suffix:-tgz}" && docker version

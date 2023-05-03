@@ -15,7 +15,7 @@ HELM_REPOS=(
 )
 
 # Installing helm
-which helm &> /dev/null || { display $GREEN "Installing helm"; curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash; }
+which helm &> /dev/null || { display $GREEN "Installing helm"; curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash; }
 
 for((i=0; i<=${#HELM_REPOS[@]}; i+=2)); do
   helm repo add "${HELM_REPOS[$i]}" "${HELM_REPOS[$((i+1))]}"
