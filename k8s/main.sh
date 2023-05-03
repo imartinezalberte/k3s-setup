@@ -117,7 +117,7 @@ done < <(multipass ls | awk '{ if ($1 ~ /^node-[1-9]/) print $3 }')
 
 mv kubeconfig $KUBECONFIG
 
-./kubectl_install.sh
+. ${script_path}/kubectl_install.sh
 
 cat <<EOF
 You can set alias so work in a smoother manner
@@ -132,7 +132,7 @@ EOF
 
 kubectl --kubeconfig=$KUBECONFIG wait --for=condition=Ready nodes --all --timeout=600s
 
-./addons.sh $KUBECONFIG
+. ${script_path}/addons.sh $KUBECONFIG
 
 # How to get admin-password and admin-user from grafana?
 # kubectl get secrets/loki-stack-grafana -n loki -o yaml | yq '.data | (.admin-user, .admin-password)'

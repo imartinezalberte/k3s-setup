@@ -68,7 +68,7 @@ which docker &> /dev/null || {
   select yn in "Yes" "No"; do
     case $yn in
       Yes) display $GREEN "Installing docker client on host machine"
-      . ./docker-client.sh
+      . ${script_path}/docker-client.sh
       break
       ;;
       No ) display $RED "Skipping step of install docker client on host machine"

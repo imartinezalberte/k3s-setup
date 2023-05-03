@@ -7,7 +7,7 @@ script_path=$(dirname "$absolute_path")
 
 MULTIPASS_VM_NAME=${1:-"docker-registry"}
 
-. ./docker.sh ${MULTIPASS_VM_NAME}
+. ${script_path}/docker.sh ${MULTIPASS_VM_NAME}
 
 multipass exec ${MULTIPASS_VM_NAME} -- /bin/bash <<EOF
 which jq &> /dev/null || { sudo apt-get install --yes jq; }
