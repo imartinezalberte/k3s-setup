@@ -56,13 +56,26 @@ sudo usermod -aG docker ubuntu
 newgrp docker
 EOF
 
-display $GREEN "If you have docker locally installed, you can add this ip to the context, you can connect directly to the machine using ssh and without opening an insecure port"
-
 MULTIPASS_IP=$(multipass ls --format=json | jq -r '.list[] | select(.state=="Running" and .name=="docker-registry") | .ipv4[0]')
 
 DOCKER_HOST="ssh://ubuntu@${MULTIPASS_IP}"
 
-which docker &> /dev/null && { 
+which docker &> /dev/null || {
+  display $GREEN "Do you want to install docker client on your computer to connect to the Multipass VM?"
+  select yn in "Yes" "No"; do
+    case $yn in
+      Yes) display $GREEN "Installing docker client on host machine"
+      . ./docker-client.sh
+      break
+      ;;
+      No ) display $RED "Skipping step of install docker client on host machine"
+      break
+      ;;
+    esac
+  done
+}
+
+which docker &> /dev/null && {
   docker context rm -f ${DOCKER_CONTEXT_NAME} &> /dev/null;
   docker context create ${DOCKER_CONTEXT_NAME} --docker "host=${DOCKER_HOST}" &> /dev/null;
   docker context use ${DOCKER_CONTEXT_NAME} &> /dev/null;
