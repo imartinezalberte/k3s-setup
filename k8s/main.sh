@@ -133,6 +133,9 @@ EOF
 kubectl --kubeconfig=$KUBECONFIG wait --for=condition=Ready nodes --all --timeout=600s
 
 . ${script_path}/addons.sh $KUBECONFIG
+
+kubectl --kubeconfig=/tmp/kubeconfig wait --for=condition=Available deployment.apps/loki-stack-grafana -n loki --timeout=60s
+
 . ${script_path}/grafana.sh
 
 # How to get admin-password and admin-user from grafana?
