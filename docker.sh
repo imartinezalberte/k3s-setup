@@ -3,6 +3,7 @@
 . ./utils.sh
 
 MULTIPASS_VM_NAME=${1:-"docker-registry"}
+DOCKER_CONTEXT_NAME=${2:-"docker-multipass"}
 
 # Multipass is used to install the VMs
 which multipass &> /dev/null || { display $PURPLE "Installing multipass"; sudo snap install multipass; }
@@ -17,7 +18,7 @@ if [[ $(multipass ls --format=json | jq -r '.list[] | select(.state=="Running") 
 
   SSH_KEY_NAME=docker_local
 
-  display $GREEN "The instance $MULTIPASS_VM_NAME is not created. We are going to create one with the following attributes:\n\tcpus: ${MULTIPASS_VM_CPUS}\n\tdisk: ${MULTIPASS_VM_DISK}G\n\tmemory: ${MULTIPASS_VM_MEMORY}G"
+  display $GREEN "The instance $MULTIPASS_VM_NAME is not created. We are going to create one with the following attributes:\n\tcpus: ${MULTIPASS_VM_CPUS}\n\tdisk: ${MULTIPASS_VM_DISK}B\n\tmemory: ${MULTIPASS_VM_MEMORY}B"
 
   rm -rf ~/.ssh/${SSH_KEY_NAME}{,.pub}
   ssh-keygen -t rsa -C "`hostname`" -f ~/.ssh/${SSH_KEY_NAME} -P "${PASSPHRASE}"
@@ -42,7 +43,7 @@ fi
 display $GREEN "We are proceding to install docker on the Multipass VM instance ${MULTIPASS_VM_NAME}"
 
 # It would be preferable to set-up docker in the VM using ansible, but for the sake of simplicity and trying to avoid adding "unnecessary" dependencies
-multipass exec ${MULTIPASS_VM_NAME} /bin/bash <<EOF
+multipass exec ${MULTIPASS_VM_NAME} which docker || multipass exec ${MULTIPASS_VM_NAME} /bin/bash <<EOF
 sudo apt-get update -y
 sudo apt-get install -y ca-certificates curl gnupg
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -56,4 +57,19 @@ newgrp docker
 EOF
 
 display $GREEN "If you have docker locally installed, you can add this ip to the context, you can connect directly to the machine using ssh and without opening an insecure port"
+
+MULTIPASS_IP=$(multipass ls --format=json | jq -r '.list[] | select(.state=="Running" and .name=="docker-registry") | .ipv4[0]')
+
+DOCKER_HOST="ssh://ubuntu@${MULTIPASS_IP}"
+
+which docker &> /dev/null && { 
+  docker context rm -f ${DOCKER_CONTEXT_NAME} &> /dev/null;
+  docker context create ${DOCKER_CONTEXT_NAME} --docker "host=${DOCKER_HOST}" &> /dev/null;
+  docker context use ${DOCKER_CONTEXT_NAME} &> /dev/null;
+  test $(cat ~/.ssh/config | grep -c "Host ${MULTIPASS_IP}$") -eq 0 && cat <<EOF >> ~/.ssh/config
+Host ${MULTIPASS_IP}
+  StrictHostKeyChecking no
+EOF
+  docker version;
+}
 
