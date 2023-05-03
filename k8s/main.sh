@@ -8,7 +8,10 @@
 # Exit codes:
 # - 1: Error creating the private/public key to log into the VMs using k3sup or standard tools like ssh
 
-. ../lib/utils.sh
+absolute_path=$(readlink -f "$0")
+script_path=$(dirname "$absolute_path")
+
+. ${script_path}/../lib/utils.sh
 
 # ssh configurations
 SSH_KEY_NAME=k3s_testing
@@ -16,7 +19,7 @@ PASSPHRASE=""
 
 # Multipass configuration
 MULTIPASS_ADDRESS='no' # Example: username@ip # Not working properly
-MULTIPASS_CONFIG=${PWD}/multipass/config.yaml
+MULTIPASS_CONFIG=${script_path}/multipass/config.yaml
 MULTIPASS_VM_CPUS=1
 MULTIPASS_VM_DISK='4G'
 MULTIPASS_VM_MEMORY='4G'

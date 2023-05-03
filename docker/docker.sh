@@ -1,6 +1,9 @@
 #!/bin/bash
 
-. ../lib/utils.sh
+absolute_path=$(readlink -f "$0")
+script_path=$(dirname "$absolute_path")
+
+. ${script_path}/../lib/utils.sh
 
 MULTIPASS_VM_NAME=${1:-"docker-registry"}
 DOCKER_CONTEXT_NAME=${2:-"docker-multipass"}
@@ -14,7 +17,7 @@ if [[ $(multipass ls --format=json | jq -r '.list[] | select(.state=="Running") 
   MULTIPASS_VM_CPUS=1
   MULTIPASS_VM_DISK='4G'
   MULTIPASS_VM_MEMORY='4G'
-  MULTIPASS_CONFIG=${PWD}/multipass/docker_config.yaml
+  MULTIPASS_CONFIG=${script_path}/multipass/docker_config.yaml
 
   SSH_KEY_NAME=docker_local
 

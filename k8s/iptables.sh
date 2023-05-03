@@ -1,6 +1,9 @@
 #!/bin/bash
 
-. ../lib/utils.sh
+absolute_path=$(readlink -f "$0")
+script_path=$(dirname "$absolute_path")
+
+. ${script_path}/../lib/utils.sh
 
 function usage {
   cat <<EOF
