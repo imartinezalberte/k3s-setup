@@ -32,5 +32,5 @@ display $GREEN "We are going to use the URL ${docker_binary_url}"
 curl -sSL $docker_binary_url --output "./${docker_binary}.${suffix:-tgz}" && \
   tar -xvzf ./${docker_binary}.${suffix:-tgz} && \
   sudo install -o root -g root -m 0755 docker/docker /usr/local/bin/docker && \
-  rm -rf docker "${docker_binary}.${suffix}" && docker version
+  rm -rf docker "${docker_binary}.${suffix:-tgz}" && docker version
 

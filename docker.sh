@@ -56,7 +56,7 @@ sudo usermod -aG docker ubuntu
 newgrp docker
 EOF
 
-MULTIPASS_IP=$(multipass ls --format=json | jq -r '.list[] | select(.state=="Running" and .name=="docker-registry") | .ipv4[0]')
+MULTIPASS_IP=$(multipass ls --format=json | jq -r --arg MULTIPASS_VM_NAME "${MULTIPASS_VM_NAME}" '.list[] | select(.state=="Running" and .name==$MULTIPASS_VM_NAME) | .ipv4[0]')
 
 DOCKER_HOST="ssh://ubuntu@${MULTIPASS_IP}"
 
