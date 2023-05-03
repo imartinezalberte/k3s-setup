@@ -2,7 +2,7 @@
 # 
 # The First parameter is the kubeconfig path
 
-. ./utils.sh
+. ../lib/utils.sh
 
 if [[ -z $KUBECONFIG ]]; then
   KUBECONFIG=${1:-$HOME/.kube/config}

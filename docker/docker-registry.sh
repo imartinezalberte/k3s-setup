@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./utils.sh
+. ../lib/utils.sh
 
 MULTIPASS_VM_NAME=${1:-"docker-registry"}
 

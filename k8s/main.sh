@@ -8,7 +8,7 @@
 # Exit codes:
 # - 1: Error creating the private/public key to log into the VMs using k3sup or standard tools like ssh
 
-. ./utils.sh
+. ../lib/utils.sh
 
 # ssh configurations
 SSH_KEY_NAME=k3s_testing

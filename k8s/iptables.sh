@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./utils.sh
+. ../lib/utils.sh
 
 function usage {
   cat <<EOF

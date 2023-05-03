@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./utils.sh
+. ../lib/utils.sh
 
 ADDRESS=${1:-"0.0.0.0"}
 KUBECONFIG=${2:-"/tmp/kubeconfig"}

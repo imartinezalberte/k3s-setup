@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./utils.sh
+. ../lib/utils.sh
 
 URL="https://download.docker.com/linux/static/stable/x86_64/"
 
