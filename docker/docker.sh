@@ -15,8 +15,8 @@ which jq > /dev/null 2>&1 || { display $PURPLE "Installing jq"; sudo apt-get ins
 
 if [[ $(multipass ls --format=json | jq -r '.list[] | select(.state=="Running") | .name' | grep -c "$MULTIPASS_VM_NAME") -lt 1 ]]; then
   MULTIPASS_VM_CPUS=1
-  MULTIPASS_VM_DISK='4G'
-  MULTIPASS_VM_MEMORY='4G'
+  MULTIPASS_VM_DISK='8G'
+  MULTIPASS_VM_MEMORY='1G'
   MULTIPASS_CONFIG=${script_path}/multipass/docker_config.yaml
 
   SSH_KEY_NAME=docker_local

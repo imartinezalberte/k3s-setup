@@ -13,7 +13,10 @@ multipass exec ${MULTIPASS_VM_NAME} -- /bin/bash <<EOF
 which jq &> /dev/null || { sudo apt-get install --yes jq; }
 if [[ \$(docker container ls -a --format="{{json .}}" | jq -r 'select(.Names=="registry" and .State=="running") | .Names' | grep -c registry) -eq 0 ]]; then
   docker rm -f registry
-  docker run -d -p 5000:5000 --restart=always --name registry registry:2
+  docker run -d -p 5000:5000 \
+    --restart=always \
+    -v /mnt/registry:/var/lib/registry \
+    --name registry registry:2
 fi
 EOF
 

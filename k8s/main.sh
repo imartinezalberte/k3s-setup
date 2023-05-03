@@ -17,6 +17,9 @@ script_path=$(dirname "$absolute_path")
 SSH_KEY_NAME=k3s_testing
 PASSPHRASE=""
 
+# Multipass VM instance name for the docker VM
+DOCKER_NAME="docker-registry"
+
 # Multipass configuration
 MULTIPASS_ADDRESS='no' # Example: username@ip # Not working properly
 MULTIPASS_CONFIG=${script_path}/multipass/config.yaml
@@ -94,12 +97,24 @@ EOF
 
 test -f ${MULTIPASS_CONFIG} && display $GREEN "The multipass config file exists. Well done!"
 
+display $GREEN "We are going to install the docker registry in a multipass VM"
+
+. ${script_path}/../docker/docker-registry.sh ${DOCKER_NAME}
+
+DOCKER_REGISTRY_IP=$(multipass ls --format=json | jq -r --arg DOCKER_NAME "${DOCKER_NAME}" '.list[] | select(.state=="Running" and .name==$DOCKER_NAME) | .ipv4[0]')
+
 for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
   multipass launch --cpus ${MULTIPASS_VM_CPUS} \
                    --memory ${MULTIPASS_VM_MEMORY} \
                    --disk ${MULTIPASS_VM_DISK} \
                    --name ${MULTIPASS_SERVER_NAME} \
                    --cloud-init ${MULTIPASS_CONFIG}
+  multipass exec ${K_SERVERS[@]} -- cat <<EOF 
+mirrors:
+  topdoctors:
+    endpoint:
+    - "http://${DOCKER_REGISTRY_IP}:5000"
+EOF
 done
 
 # Another option would be: multipass ls | grep "${K_SERVERS[0]}" | awk '{print $3}'
