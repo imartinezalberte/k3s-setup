@@ -24,5 +24,5 @@ for((i=0; i<=${#HELM_REPOS[@]}; i+=2)); do
   helm repo add "${HELM_REPOS[$i]}" "${HELM_REPOS[$((i+1))]}"
 done
 
-helm install --values ./values.yaml loki-stack grafana/loki-stack -n loki --create-namespace
+helm --kubeconfig=$KUBECONFIG install --values ${script_path}/values.yaml loki-stack grafana/loki-stack -n loki --create-namespace
 
