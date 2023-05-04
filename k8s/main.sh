@@ -109,11 +109,9 @@ for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
                    --disk ${MULTIPASS_VM_DISK} \
                    --name ${MULTIPASS_SERVER_NAME} \
                    --cloud-init ${MULTIPASS_CONFIG}
-  multipass exec ${MULTIPASS_SERVER_NAME} -- cat <<EOF 
-mirrors:
-  topdoctors:
-    endpoint:
-    - "http://${DOCKER_REGISTRY_IP}:5000"
+  multipass exec ${MULTIPASS_SERVER_NAME} -- sudo /bin/bash <<EOF
+mkdir --parents /etc/rancher/k3s/
+echo -e "mirrors:\n\ttopdoctors:\n\t\tendpoints:\n\t\t-\"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
 EOF
 done
 
