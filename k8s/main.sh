@@ -25,7 +25,7 @@ MULTIPASS_ADDRESS='no' # Example: username@ip # Not working properly
 MULTIPASS_CONFIG=${script_path}/multipass/config.yaml
 MULTIPASS_VM_CPUS=1
 MULTIPASS_VM_DISK='4G'
-MULTIPASS_VM_MEMORY='4G'
+MULTIPASS_VM_MEMORY='2G'
 
 # Kubernetes configuration
 K_WORKER_PREFIX="node-"
@@ -111,7 +111,7 @@ for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
                    --cloud-init ${MULTIPASS_CONFIG}
   multipass exec ${MULTIPASS_SERVER_NAME} -- sudo /bin/bash <<EOF
 mkdir --parents /etc/rancher/k3s/
-echo -e "mirrors:\n\ttopdoctors:\n\t\tendpoints:\n\t\t-\"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
+echo -e "mirrors:\n  topdoctors:\n    endpoint:\n    - \"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
 EOF
 done
 
