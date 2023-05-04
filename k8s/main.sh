@@ -109,7 +109,7 @@ for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
                    --disk ${MULTIPASS_VM_DISK} \
                    --name ${MULTIPASS_SERVER_NAME} \
                    --cloud-init ${MULTIPASS_CONFIG}
-  multipass exec ${K_SERVERS[@]} -- cat <<EOF 
+  multipass exec ${MULTIPASS_SERVER_NAME} -- cat <<EOF 
 mirrors:
   topdoctors:
     endpoint:
