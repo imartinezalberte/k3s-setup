@@ -50,6 +50,7 @@ MULTIPASS_VM_MEMORY=$(expr_or_default '.multipass.vm.memory' '2G')
 K_WORKER_PREFIX=$(expr_or_default '.kubernetes.worker_prefix' "node-")
 K_SERVERS_N=$(expr_or_default '.kubernetes.servers' 2)
 K_REGISTRY_HOSTNAME=$(expr_or_default '.kubernetes.registry_hostname' "docker.es")
+K_SERVERS_N=$(expr_or_default '.kubernetes.servers' 2)
 K_SERVERS=("master-node")
 KUBECONFIG=/tmp/kubeconfig
 
