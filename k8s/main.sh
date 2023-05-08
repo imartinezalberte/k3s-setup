@@ -31,6 +31,7 @@ MULTIPASS_VM_MEMORY='2G'
 K_WORKER_PREFIX="node-"
 K_SERVERS_N=2
 K_SERVERS=("master-node")
+K_DOCKER_HOSTNAME="docker.es"
 KUBECONFIG=/tmp/kubeconfig
 
 # usage function just returns a help text to explain what is the purpose of this script and the possible options that it offers.
@@ -111,7 +112,7 @@ for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
                    --cloud-init ${MULTIPASS_CONFIG}
   multipass exec ${MULTIPASS_SERVER_NAME} -- sudo /bin/bash <<EOF
 mkdir --parents /etc/rancher/k3s/
-echo -e "mirrors:\n  topdoctors:\n    endpoint:\n    - \"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
+echo -e "mirrors:\n  \"${K_DOCKER_HOSTNAME}\":\n    endpoint:\n    - \"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
 EOF
 done
 
@@ -157,3 +158,5 @@ kubectl --kubeconfig=/tmp/kubeconfig wait --for=condition=Available deployment.a
 # One liner to discover the username and password of grafana user interface
 # while read -r line; do echo $(base64 -d <<< $line); done < <(kubectl get secrets/loki-stack-grafana -n loki -o yaml | yq '.data | (.admin-user, .admin-password)')
 
+# If you want to display all the docker registries, then use:
+# sudo crictl info | jq '.config.registry.mirrors | keys'
