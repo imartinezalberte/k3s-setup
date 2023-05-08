@@ -146,7 +146,7 @@ k3sup install --ip ${MASTER_NODE_IP} --user ubuntu --ssh-key ~/.ssh/${SSH_KEY_NA
 # Installing the k3s in worker node
 while read -r WORKER_NODE_IP; do 
   k3sup join --ip ${WORKER_NODE_IP} --user ubuntu --ssh-key ~/.ssh/${SSH_KEY_NAME} --server-ip ${MASTER_NODE_IP} --server-user ubuntu
-done < <(multipass ls | awk -v k_worker_prefix=${K_WORKER_PREFIX} '{ if ($1 ~ /^k_worker_prefix-[1-9]/) print $3 }')
+done < <(multipass ls | grep -E "$K_WORKER_PREFIX[1-9]" | awk '{print $3}')
 
 mv kubeconfig $K_KUBECONFIG
 
