@@ -1,0 +1,16 @@
+ssh:
+  name: "testing"
+  passphrase:
+registry:
+  name: docker-registry
+multipass:
+  config_file: multipass/config.yaml
+  vm:
+    cpus: 1
+    memory: "4G"
+    disk: "4G"
+kubernetes:
+  worker_prefix: "worker-"
+  servers: 2
+  registry_hostname: "docker.es"
+

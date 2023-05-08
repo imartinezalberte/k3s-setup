@@ -13,25 +13,44 @@ script_path=$(dirname "$absolute_path")
 
 . ${script_path}/../lib/utils.sh
 
+# Curl is used to download stuff from internet
+which curl &> /dev/null || { display $PURPLE "Installing curl"; sudo apt-get install --yes curl; }
+# Multipass is used to install the VMs
+which multipass &> /dev/null || { display $PURPLE "Installing multipass"; sudo snap install multipass; }
+# k3sup is used to install k3s in each VM once created
+which k3sup > /dev/null 2>&1 || { display $PURPLE "Installing k3sup"; curl -sLS https://get.k3sup.dev | sh; sudo install k3sup /usr/local/bin; }
+# We need jq to get the information needed from the json output of multipass
+which jq > /dev/null 2>&1 || { display $PURPLE "Installing jq"; sudo apt-get install --yes jq; }
+# We need yq to get the information needed from configuration
+which yq > /dev/null 2>&1 || { display $PURPLE "Installing yq"; wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && sudo install -o root -g root -m 0755 ./yq /usr/local/bin/yq && rm ./yq; }
+
+CONFIG_FILE=${K_CONFIG_FILE:-"${script_path}/config.yaml"}
+
+function expr_or_default {
+  if [[ $# -ne 2 ]]; then return 0; fi
+  if ! [[ -f ${CONFIG_FILE} ]]; then return $2; fi
+  query=$1
+  echo $(yq $query ${CONFIG_FILE})
+}
+
 # ssh configurations
-SSH_KEY_NAME=k3s_testing
-PASSPHRASE=""
+SSH_KEY_NAME=$(expr_or_default '.ssh.name' "k3s_testing")
+PASSPHRASE=$(expr_or_default '.ssh.passphrase' "")
 
 # Multipass VM instance name for the docker VM
-DOCKER_NAME="docker-registry"
+REGISTRY_NAME=$(expr_or_default '.registry.name' "docker-registry")
 
 # Multipass configuration
-MULTIPASS_ADDRESS='no' # Example: username@ip # Not working properly
-MULTIPASS_CONFIG=${script_path}/multipass/config.yaml
-MULTIPASS_VM_CPUS=1
-MULTIPASS_VM_DISK='4G'
-MULTIPASS_VM_MEMORY='2G'
+MULTIPASS_CONFIG=$(expr_or_default '.multipass.config_file' "${script_path}/multipass/config.yaml")
+MULTIPASS_VM_CPUS=$(expr_or_default '.multipass.vm.cpus' 1)
+MULTIPASS_VM_DISK=$(expr_or_default '.multipass.vm.disk' '4G')
+MULTIPASS_VM_MEMORY=$(expr_or_default '.multipass.vm.memory' '2G')
 
 # Kubernetes configuration
-K_WORKER_PREFIX="node-"
-K_SERVERS_N=2
+K_WORKER_PREFIX=$(expr_or_default '.kubernetes.worker_prefix' "node-")
+K_SERVERS_N=$(expr_or_default '.kubernetes.servers' 2)
+K_REGISTRY_HOSTNAME=$(expr_or_default '.kubernetes.registry_hostname' "docker.es")
 K_SERVERS=("master-node")
-K_DOCKER_HOSTNAME="docker.es"
 KUBECONFIG=/tmp/kubeconfig
 
 # usage function just returns a help text to explain what is the purpose of this script and the possible options that it offers.
@@ -46,15 +65,6 @@ function usage {
 EOF
 }
 
-# Curl is used to download stuff from internet
-which curl &> /dev/null || { display $PURPLE "Installing curl"; sudo apt-get install --yes curl; }
-# Multipass is used to install the VMs
-which multipass &> /dev/null || { display $PURPLE "Installing multipass"; sudo snap install multipass; }
-# k3sup is used to install k3s in each VM once created
-which k3sup > /dev/null 2>&1 || { display $PURPLE "Installing k3sup"; curl -sLS https://get.k3sup.dev | sh; sudo install k3sup /usr/local/bin; }
-# We need jq to get the information needed from the json output of multipass
-which jq > /dev/null 2>&1 || { display $PURPLE "Installing jq"; sudo apt-get install --yes jq; }
-
 while getopts ":hn:k:c:a:" opt; do
   case $opt in
     n) if ! is_number $OPTARG; then 
@@ -67,7 +77,7 @@ while getopts ":hn:k:c:a:" opt; do
     ;;
     k) SSH_KEY_NAME=${OPTARG:-SSH_KEY_NAME}
     ;;
-    c) MULTIPASS_CONFIG=${OPTARG:-MULTIPASS_CONFIG} 
+    c) MULTIPASS_CONFIG=${OPTARG:-MULTIPASS_CONFIG}
     ;;
     a) MULTIPASS_ADDRESS=${OPTARG:-MULTIPASS_ADDRESS}
     ;;
@@ -100,9 +110,9 @@ test -f ${MULTIPASS_CONFIG} && display $GREEN "The multipass config file exists.
 
 display $GREEN "We are going to install the docker registry in a multipass VM"
 
-. ${script_path}/../docker/docker-registry.sh ${DOCKER_NAME}
+. ${script_path}/../docker/docker-registry.sh ${REGISTRY_NAME}
 
-DOCKER_REGISTRY_IP=$(multipass ls --format=json | jq -r --arg DOCKER_NAME "${DOCKER_NAME}" '.list[] | select(.state=="Running" and .name==$DOCKER_NAME) | .ipv4[0]')
+DOCKER_REGISTRY_IP=$(multipass ls --format=json | jq -r --arg REGISTRY_NAME "${REGISTRY_NAME}" '.list[] | select(.state=="Running" and .name==$REGISTRY_NAME) | .ipv4[0]')
 
 for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
   multipass launch --cpus ${MULTIPASS_VM_CPUS} \
@@ -112,7 +122,7 @@ for MULTIPASS_SERVER_NAME in ${K_SERVERS[@]}; do
                    --cloud-init ${MULTIPASS_CONFIG}
   multipass exec ${MULTIPASS_SERVER_NAME} -- sudo /bin/bash <<EOF
 mkdir --parents /etc/rancher/k3s/
-echo -e "mirrors:\n  \"${K_DOCKER_HOSTNAME}\":\n    endpoint:\n    - \"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
+echo -e "mirrors:\n  \"${K_REGISTRY_HOSTNAME}\":\n    endpoint:\n    - \"http://${DOCKER_REGISTRY_IP}:5000\"" > /etc/rancher/k3s/registries.yaml
 EOF
 done
 
