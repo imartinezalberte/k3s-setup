@@ -25,6 +25,7 @@ which jq > /dev/null 2>&1 || { display $PURPLE "Installing jq"; sudo apt-get ins
 which yq > /dev/null 2>&1 || { display $PURPLE "Installing yq"; wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && sudo install -o root -g root -m 0755 ./yq /usr/local/bin/yq && rm ./yq; }
 
 CONFIG_FILE=${K_CONFIG_FILE:-"${script_path}/config.yaml"}
+DEBUGGING="false"
 
 function expr_or_default {
   if [[ $# -ne 2 ]]; then return 0; fi
@@ -35,7 +36,7 @@ function expr_or_default {
 
 # ssh configurations
 SSH_KEY_NAME=$(expr_or_default '.ssh.name' "k3s_testing")
-PASSPHRASE=$(expr_or_default '.ssh.passphrase' "")
+SSH_KEY_PASSPHRASE=$(expr_or_default '.ssh.passphrase' "")
 
 # Multipass VM instance name for the docker VM
 REGISTRY_NAME=$(expr_or_default '.registry.name' "docker-registry")
@@ -52,7 +53,7 @@ K_SERVERS_N=$(expr_or_default '.kubernetes.servers' 2)
 K_REGISTRY_HOSTNAME=$(expr_or_default '.kubernetes.registry_hostname' "docker.es")
 K_SERVERS_N=$(expr_or_default '.kubernetes.servers' 2)
 K_SERVERS=("master-node")
-KUBECONFIG=/tmp/kubeconfig
+K_KUBECONFIG=/tmp/kubeconfig
 
 # usage function just returns a help text to explain what is the purpose of this script and the possible options that it offers.
 function usage {
@@ -66,7 +67,7 @@ function usage {
 EOF
 }
 
-while getopts ":hn:k:c:a:" opt; do
+while getopts ":hn:k:c:a:v" opt; do
   case $opt in
     n) if ! is_number $OPTARG; then 
       display $RED "The number of machines must be 1 or greater."; usage; exit 2
@@ -82,6 +83,8 @@ while getopts ":hn:k:c:a:" opt; do
     ;;
     a) MULTIPASS_ADDRESS=${OPTARG:-MULTIPASS_ADDRESS}
     ;;
+    v) DEBUGGING="true"
+    ;;
     h) usage
     exit 0
     ;;
@@ -94,10 +97,15 @@ done
 # Adding the worker servers to the array
 for((i=1; i<=$K_SERVERS_N; i++)); do K_SERVERS+=("${K_WORKER_PREFIX}$i"); done
 
-display $BLUE "WORKER_NODES=$((${#K_SERVERS[@]}-1))\nSSH_KEY_NAME=${SSH_KEY_NAME}\nMULTIPASS_CONFIG=${MULTIPASS_CONFIG}\n"
+# Some verbose information
+if [[ "$DEBUGGING" == "true" ]]; then
+  for i in ${!SSH_KEY_*}; do display $BLUE "$i=${!i}"; done
+  for i in ${!MULTIPASS_*}; do display $BLUE "$i=${!i}"; done
+  for i in ${!K_*}; do display $BLUE "$i=${!i}"; done
+fi
 
 rm -rf ~/.ssh/${SSH_KEY_NAME}{,.pub}
-ssh-keygen -t rsa -C "`hostname`" -f ~/.ssh/${SSH_KEY_NAME} -P "${PASSPHRASE}"
+ssh-keygen -t rsa -C "`hostname`" -f ~/.ssh/${SSH_KEY_NAME} -P "${SSH_KEY_PASSPHRASE}"
 
 if ! [[ -f ~/.ssh/${SSH_KEY_NAME} ]]; then display $RED "The private/public key was not created successfully"; exit 1; fi
 
@@ -140,24 +148,24 @@ while read -r WORKER_NODE_IP; do
   k3sup join --ip ${WORKER_NODE_IP} --user ubuntu --ssh-key ~/.ssh/${SSH_KEY_NAME} --server-ip ${MASTER_NODE_IP} --server-user ubuntu
 done < <(multipass ls | awk '{ if ($1 ~ /^node-[1-9]/) print $3 }')
 
-mv kubeconfig $KUBECONFIG
+mv kubeconfig $K_KUBECONFIG
 
 . ${script_path}/kubectl_install.sh
 
 cat <<EOF
 You can set alias so work in a smoother manner
 
-alias k="kubectl --kubeconfig=$KUBECONFIG"
-alias h="helm --kubeconfig=$KUBECONFIG"
+alias k="kubectl --kubeconfig=$K_KUBECONFIG"
+alias h="helm --kubeconfig=$K_KUBECONFIG"
 
-Or try to set the environment variable KUBECONFIG to $KUBECONFIG
+Or try to set the environment variable KUBECONFIG to $K_KUBECONFIG
 
-export KUBECONFIG=$KUBECONFIG
+export KUBECONFIG=$K_KUBECONFIG
 EOF
 
-kubectl --kubeconfig=$KUBECONFIG wait --for=condition=Ready nodes --all --timeout=600s
+kubectl --kubeconfig=$K_KUBECONFIG wait --for=condition=Ready nodes --all --timeout=600s
 
-. ${script_path}/addons.sh $KUBECONFIG
+. ${script_path}/addons.sh $K_KUBECONFIG
 
 kubectl --kubeconfig=/tmp/kubeconfig wait --for=condition=Available deployment.apps/loki-stack-grafana -n loki --timeout=60s
 
